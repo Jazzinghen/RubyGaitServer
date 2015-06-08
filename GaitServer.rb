@@ -1,4 +1,5 @@
 require 'socket'
+require 'json'
 
 # Wait, are there style guidelines for Ruby?
 # ESPECIALLY FOR VARIABLE NAMING? O_o
@@ -14,6 +15,7 @@ server = TCPServer.new(server_address, server_port)
 while (session = server.accept)
   # Start a new threaded conversation
   Thread.start do
+    angle = 0
     # First things first: we output the information on the client address and port
     # TCPSocket.peeraddr #=> [address_family, port, hostname and numeric_address]
     puts "log: Connection from #{session.peeraddr[3]} at
@@ -23,13 +25,17 @@ while (session = server.accept)
     ## for an end of line character "\n" before moving forward.
     # input = session.gets
     # puts input
-
-    # Let's send something to the client, to acknowledge the connection
-    session.puts "Server: Welcome #{session.peeraddr[2]}\n"
+    session.puts "0;#{angle};0#"
+    (0..5).each do |i|
+      sleep 1
+      angle = angle + 10
+      session.puts "0;#{angle};0#"
+    end
     # reply with goodbye
     ## now lets end the session since all we wanted to do is
     ## acknowledge the client
-    puts "log: sending goodbye"
-    session.puts "Server: Goodbye\n"
+    angle = angle + 10
+    puts "0;#{angle};0#"
+    #session.puts "Server: Goodbye\n"
   end  #end thread conversation
 end   #end loop
