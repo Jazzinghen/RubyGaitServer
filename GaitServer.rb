@@ -23,19 +23,24 @@ while (session = server.accept)
     ## lets see what the client has to say by grabbing the input
     ## then display it. Please note that the session.gets will look
     ## for an end of line character "\n" before moving forward.
-    # input = session.gets
-    # puts input
-    session.puts "0;#{angle};0#"
+
+    # Generate a very basic JSON structure to send to UE4
+    angle_data = {left_calf: {pitch: 0, yaw: 0, roll: angle}}
+
+    puts JSON.generate(angle_data)
+
+    session.puts JSON.generate(angle_data)
     (0..5).each do |i|
       sleep 1
       angle = angle + 10
-      session.puts "0;#{angle};0#"
+      angle_data[:left_calf][:roll] = angle
+      session.puts JSON.generate(angle_data)
     end
     # reply with goodbye
     ## now lets end the session since all we wanted to do is
     ## acknowledge the client
-    angle = angle + 10
-    puts "0;#{angle};0#"
+    angle_data[:left_calf][:roll] = angle
+    session.puts JSON.generate(angle_data)
     #session.puts "Server: Goodbye\n"
   end  #end thread conversation
 end   #end loop
