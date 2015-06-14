@@ -11,6 +11,7 @@
 #    - Animation frames are just a LINE of rotations and translations, based on the definitions of the bones. To
 #      extract information it is needed to analyse them in order. In CMU case, for example, the data is like this:
 #      Hips_tr_z Hips_tr_x Hips_tr_y Hips_rt_z Hips_rt_x Hips_rt_y LeftHip_rt_z LeftHip_rt_x LeftHip_rt_y [and so on]
+#    - Even though there are nodes at the end of each limb they do not have any rotation information in the frame data.
 
 ## Conversion BVH to Unreal Engine 4 bones:
 #      BVH                     Unreal Engine 4
@@ -27,58 +28,66 @@
 #    - Head                 -> Neck_01
 
 ## Functions to parse rotation angles and place them into their respective structures
-def hip_parser(rotation_data)
+def hip_parser(rotation_data, correction_data)
+  rx = rotation_data[1].to_f
+  rz = rotation_data[2].to_f
+  ry = rotation_data[0].to_f
+  {roll:rx, pitch: ry, yaw: rz}
+  #{roll:rx - correction_data[:rx], pitch: ry - correction_data[:ry], yaw: rz - correction_data[:rz]}
+end
+
+def knee_parser(rotation_data, correction_data)
   rx = rotation_data[1].to_f
   rz = rotation_data[2].to_f
   ry = rotation_data[0].to_f
   {roll:rx, pitch: ry, yaw: rz}
 end
 
-def knee_parser(rotation_data)
+def shoulder_parser(rotation_data, correction_data)
   rx = rotation_data[1].to_f
   rz = rotation_data[2].to_f
   ry = rotation_data[0].to_f
-  {roll: rx, pitch: ry, yaw: rz}
+  {roll:rx - correction_data[:rx], pitch: ry - correction_data[:ry], yaw: rz - correction_data[:rz]}
 end
 
-def shoulder_parser(rotation_data)
+def elbow_parser(rotation_data, correction_data)
   rx = rotation_data[1].to_f
   rz = rotation_data[2].to_f
   ry = rotation_data[0].to_f
-  {roll:rx, pitch: ry, yaw: rz}
+  {roll:rx - correction_data[:rx], pitch: ry - correction_data[:ry], yaw: rz - correction_data[:rz]}
 end
 
-def elbow_parser(rotation_data)
+def neck_parser(rotation_data, correction_data)
   rx = rotation_data[1].to_f
   rz = rotation_data[2].to_f
   ry = rotation_data[0].to_f
-  {roll:rx, pitch: ry, yaw: rz}
+  {roll:rx - correction_data[:rx], pitch: ry - correction_data[:ry], yaw: rz - correction_data[:rz]}
 end
 
-def neck_parser(rotation_data)
+def chest_parser(rotation_data, correction_data)
   rx = rotation_data[1].to_f
   rz = rotation_data[2].to_f
   ry = rotation_data[0].to_f
-  {roll:rx, pitch: ry, yaw: rz}
+  {roll:rx - correction_data[:rx], pitch: ry - correction_data[:ry], yaw: rz - correction_data[:rz]}
 end
 
-def chest_parser(rotation_data)
+def root_parser(rotation_data, correction_data)
   rx = rotation_data[1].to_f
   rz = rotation_data[2].to_f
   ry = rotation_data[0].to_f
-  {roll:rx, pitch: ry, yaw: rz}
+  {roll:rx - correction_data[:rx], pitch: ry - correction_data[:ry], yaw: rz - correction_data[:rz]}
 end
 
-def root_parser(rotation_data)
+def pelvis_parser(rotation_data, correction_data)
   rx = rotation_data[1].to_f
   rz = rotation_data[2].to_f
   ry = rotation_data[0].to_f
-  {roll:rx, pitch: ry, yaw: rz}
+  {roll:rx - correction_data[:rx], pitch: ry - correction_data[:ry], yaw: rz - correction_data[:rz]}
 end
 
-def pelvis_parser(rotation_data)
+def correction_parser(rotation_data)
   rx = rotation_data[1].to_f
   rz = rotation_data[2].to_f
   ry = rotation_data[0].to_f
-  {roll:rx, pitch: ry, yaw: rz}
+  {rx:rx, ry: ry, rz: rz}
 end

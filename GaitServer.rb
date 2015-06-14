@@ -1,6 +1,6 @@
 require 'socket'
 require 'json'
-require_relative 'GaitAMCParsers'
+require_relative 'GaitBVHParsers'
 
 # Wait, are there style guidelines for Ruby?
 # ESPECIALLY FOR VARIABLE NAMING? O_o
@@ -27,56 +27,107 @@ while (session = server.accept)
 
     # Generate a very basic JSON structure to send to UE4
     angle_data = {} #{left_calf: {pitch: 0, yaw: 0, roll: angle}}
-
+    correction_data = {}
+    
     #puts JSON.generate(angle_data)
 
     i = 0
 
     #session.puts JSON.generate(angle_data)
-    File.open('MOCAP/08_02.amc', 'r') do |mocap_file|
+    File.open('MOCAP/37_01.bvh', 'r') do |mocap_file|
       mocap_file.each_line do |line|
         exploded_line = line.split
-        if exploded_line[0].to_i == 0
-          case exploded_line[0]
-            when 'ltibia'
-              angle_data[:right_calf] = tibia_parser(exploded_line.drop(1))
-            when 'rtibia'
-              angle_data[:left_calf] = tibia_parser(exploded_line.drop(1))
-            when 'lfemur'
-              angle_data[:right_thigh] = femur_parser(exploded_line.drop(1))
-            when 'rfemur'
-              angle_data[:left_thigh] = femur_parser(exploded_line.drop(1))
-            when 'rhumerus'
-              angle_data[:right_upperarm] = humerus_parser(exploded_line.drop(1))
-            when 'lhumerus'
-              angle_data[:left_upperarm] = humerus_parser(exploded_line.drop(1))
-            when 'lowerback'
-              angle_data[:spine_01] = spine_parser(exploded_line.drop(1))
-            when 'upperback'
-              angle_data[:spine_02] = spine_parser(exploded_line.drop(1))
-            when 'thorax'
-              angle_data[:spine_03] = spine_parser(exploded_line.drop(1))
-            when 'upperneck'
-              angle_data[:neck] = neck_parser(exploded_line.drop(1))
-            when 'head'
-              angle_data[:head] = neck_parser(exploded_line.drop(1))
-            when 'root'
-              angle_data[:root] = root_parser(exploded_line.drop(4))
-            when 'lhipjoint'
-              angle_data[:left_hip_joint] = hip_parser(exploded_line.drop(1))
-            when 'rhipjoint'
-              angle_data[:right_hip_joint] = hip_parser(exploded_line.drop(1))
-            else
-              # Do stuff
-          end
-        else
+        if exploded_line[0].to_i != 0
 
-          puts JSON.generate(angle_data)
-          session.puts JSON.generate(angle_data)
-          sleep(0.05)
+          if correction_data[:pelvis]
+            angle_data[:pelvis] = pelvis_parser(exploded_line.drop(3).take(3), correction_data[:pelvis])
+            exploded_line = exploded_line.drop(6)
+
+            angle_data[:left_thigh] =  hip_parser(exploded_line.take(3), correction_data[:left_thigh])
+            exploded_line = exploded_line.drop(3)
+
+            angle_data[:left_calf] =  knee_parser(exploded_line.take(3), correction_data[:left_calf])
+            exploded_line = exploded_line.drop(6)
+
+            angle_data[:right_thigh] =  hip_parser(exploded_line.take(3), correction_data[:right_thigh])
+            exploded_line = exploded_line.drop(3)
+
+            angle_data[:right_calf] =  knee_parser(exploded_line.take(3), correction_data[:right_calf])
+            exploded_line = exploded_line.drop(6)
+
+            angle_data[:spine_01] = chest_parser(exploded_line.take(3), correction_data[:spine_01])
+            exploded_line = exploded_line.drop(3)
+
+            angle_data[:spine_03] = chest_parser(exploded_line.take(3), correction_data[:spine_03])
+            exploded_line = exploded_line.drop(3)
+
+            angle_data[:left_clavicle] = chest_parser(exploded_line.take(3), correction_data[:left_clavicle])
+            exploded_line = exploded_line.drop(3)
+
+            angle_data[:left_upper_arm] = shoulder_parser(exploded_line.take(3), correction_data[:left_upper_arm])
+            exploded_line = exploded_line.drop(3)
+
+            angle_data[:left_lower_arm] = chest_parser(exploded_line.take(3), correction_data[:left_lower_arm])
+            exploded_line = exploded_line.drop(6)
+
+            angle_data[:right_clavicle] = chest_parser(exploded_line.take(3), correction_data[:right_clavicle])
+            exploded_line = exploded_line.drop(3)
+
+            angle_data[:right_upper_arm] = shoulder_parser(exploded_line.take(3), correction_data[:right_upper_arm])
+            exploded_line = exploded_line.drop(3)
+
+            angle_data[:right_lower_arm] = chest_parser(exploded_line.take(3), correction_data[:right_lower_arm])
+            exploded_line = exploded_line.drop(6)
+
+
+            puts JSON.generate(angle_data)
+            session.puts JSON.generate(angle_data)
+            sleep(0.04)
+            
+          else
+            correction_data[:pelvis] = correction_parser(exploded_line.drop(3).take(3))
+            exploded_line = exploded_line.drop(6)
+
+            correction_data[:left_thigh] =  correction_parser(exploded_line.take(3))
+            exploded_line = exploded_line.drop(3)
+
+            correction_data[:left_calf] =  correction_parser(exploded_line.take(3))
+            exploded_line = exploded_line.drop(6)
+
+            correction_data[:right_thigh] =  correction_parser(exploded_line.take(3))
+            exploded_line = exploded_line.drop(3)
+
+            correction_data[:right_calf] =  correction_parser(exploded_line.take(3))
+            exploded_line = exploded_line.drop(6)
+
+            correction_data[:spine_01] = correction_parser(exploded_line.take(3))
+            exploded_line = exploded_line.drop(3)
+
+            correction_data[:spine_03] = correction_parser(exploded_line.take(3))
+            exploded_line = exploded_line.drop(3)
+
+            correction_data[:left_clavicle] = correction_parser(exploded_line.take(3))
+            exploded_line = exploded_line.drop(3)
+
+            correction_data[:left_upper_arm] = correction_parser(exploded_line.take(3))
+            exploded_line = exploded_line.drop(3)
+
+            correction_data[:left_lower_arm] = correction_parser(exploded_line.take(3))
+            exploded_line = exploded_line.drop(6)
+
+            correction_data[:right_clavicle] = correction_parser(exploded_line.take(3))
+            exploded_line = exploded_line.drop(3)
+
+            correction_data[:right_upper_arm] = correction_parser(exploded_line.take(3))
+            exploded_line = exploded_line.drop(3)
+
+            correction_data[:right_lower_arm] = correction_parser(exploded_line.take(3))
+            exploded_line = exploded_line.drop(6)
+          end
         end
       end
     end
+
     # reply with goodbye
     ## now lets end the session since all we wanted to do is
     ## acknowledge the client
